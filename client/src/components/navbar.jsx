@@ -2,6 +2,11 @@
 
 import React from 'react';
 import { Menu, X } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { logout } from '../utils/redux/appSlice.jsx';
+import authApi from '../utils/axios/axiosInstance';
+import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
 
 const menuItems = [
   {
@@ -12,17 +17,28 @@ const menuItems = [
     name: 'Transactions',
     href: '/transactions',
   },
-  {
-    name: 'Contact',
-    href: '#',
-  },
 ];
 
 const Navbar = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
+  };
+
+  const logoutfn = () => {
+    try {
+      authApi.get('/auth/signout').then((data) => {
+        navigate('/signin');
+        dispatch(logout());
+        console.log(data?.data);
+      });
+    } catch (error) {
+      toast.error('something went wrong!');
+    }
   };
 
   return (
@@ -46,6 +62,7 @@ const Navbar = () => {
           <button
             type="button"
             className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+            onClick={() => logoutfn()}
           >
             Logout
           </button>
@@ -88,6 +105,7 @@ const Navbar = () => {
                 <button
                   type="button"
                   className="mt-4 w-full rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+                  onClick={() => logoutfn()}
                 >
                   Logout
                 </button>

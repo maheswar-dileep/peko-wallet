@@ -17,18 +17,20 @@ const SignIn = () => {
     },
     validationSchema: signInSchema,
     onSubmit: async (values) => {
-      console.log('sdrse')
       try {
         const res = await authApi.post('auth/signin', values);
-        console.log(res);
+        // console.log(res);
         if (res) {
           toast.success('Login successful!');
         }
         const {
-          data: { accessToken },
+          data: { accessToken }
         } = await authApi.get('auth/refresh');
-        const data = await authApi.get('auth/refresh');
-        console.log(data);
+        const user = res.data.user
+        localStorage.setItem('userId', user._id);
+        localStorage.setItem('userName', user.username);
+        localStorage.setItem('uniqueId', user.uniqueId);
+        await authApi.get('auth/refresh');
         dispatch(addAccessTokenToken(accessToken));
         navigate('/');
       } catch (error) {
