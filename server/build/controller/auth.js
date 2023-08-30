@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import { v4 as uuidv4 } from 'uuid';
 import jwt from 'jsonwebtoken';
 import { User } from '../model/user.js';
 import validateSignup from '../helpers/validations/signup.js';
@@ -12,11 +13,18 @@ export const signup = async (req, res) => {
         const userExists = await User.findOne({ email: value?.email });
         if (userExists)
             return res.status(405).send({ success: false, message: 'user already exists' });
+        function generateUnique6Digit() {
+            const fullUuid = uuidv4();
+            const unique6Digit = fullUuid.substr(0, 6);
+            return unique6Digit;
+        }
+        const uniqueId = generateUnique6Digit();
         const hash = await bcrypt.hash(value?.password, 10);
         const newUser = new User({
             username: value?.username,
             email: value?.email,
             password: hash,
+            uniqueId,
         });
         await newUser.save();
         return res.status(201).send({ success: true, message: 'user created Successfully' });

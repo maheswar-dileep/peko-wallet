@@ -6,6 +6,7 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import connection from './config/dbconfig.js';
 import authRouter from './router/auth.js';
+import paymentRouter from './router/payment.js';
 
 const app: Express = express();
 dotenv.config();
@@ -23,13 +24,14 @@ app.use(helmet());
 app.use(morgan('dev'));
 
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/payment', paymentRouter);
 
 app.use((req, res) => {
   res.send('invalid request');
 });
 
-const port: number = 8080 || Number(process.env.port);
+const PORT: number = 8080 || Number(process.env.PORT);
 
-app.listen(port, () => {
-  console.log(` server started on http://localhost:8080 `);
+app.listen(PORT, () => {
+  console.log(`server started on http://localhost:${PORT} `);
 });
