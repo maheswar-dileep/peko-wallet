@@ -1,9 +1,11 @@
 import bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
+import nodemailer from 'nodemailer';
 import jwt from 'jsonwebtoken';
 import { User } from '../model/user.js';
 import validateSignup from '../helpers/validations/signup.js';
 import validateSignin from '../helpers/validations/signin.js';
+import { OTPModel } from '../model/otp.js';
 //*--- signup ---*//
 export const signup = async (req, res) => {
     try {
@@ -118,6 +120,67 @@ export const signout = (req, res) => {
     catch (error) {
         console.log(error);
         res.status(500).send({ err: error });
+    }
+};
+export const getOTP = async (req, res) => {
+    const userExists = await User.findOne({ email: req.body?.email });
+    if (!userExists)
+        return res.status(405).send({ success: false, message: 'user does not exist' });
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+    const sendOTPEmail = (recipient, otpCode) => {
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: recipient,
+            subject: 'Your OTP Code',
+            text: `Your OTP code is: ${otpCode}`,
+        };
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log('Error sending OTP email:', error);
+            }
+            else {
+                console.log('OTP email sent:', info.response);
+            }
+        });
+    };
+    function generateUnique6Digit() {
+        const fullUuid = uuidv4();
+        const sixDigits = fullUuid.replace(/[^0-9]/g, '').substr(0, 6);
+        return sixDigits;
+    }
+    const userEmailAddress = req.body?.email;
+    const otpCode = generateUnique6Digit();
+    const newOTP = new OTPModel({
+        code: otpCode,
+        email: userEmailAddress,
+    });
+    newOTP.save();
+    sendOTPEmail(userEmailAddress, otpCode);
+    return res.status(200).send({ success: true, message: 'Email send Successfully' });
+};
+export const validateOTP = async (req, res) => {
+    try {
+        const verifyOTP = await OTPModel.findOne({ email: req.body.email });
+        if (!verifyOTP) {
+            return res.status(400).send({ success: false, message: 'OTP not found for the given email' });
+        }
+        if (verifyOTP.code === req.body?.code) {
+            await OTPModel.deleteOne({ email: req.body.email });
+            return res.status(200).send({ success: true, message: 'Email verified successfully' });
+        }
+        else {
+            return res.status(400).send({ success: false, message: 'Email verification failed' });
+        }
+    }
+    catch (error) {
+        console.error(error);
+        return res.status(500).send({ success: false, message: 'Internal server error' });
     }
 };
 //# sourceMappingURL=auth.js.map

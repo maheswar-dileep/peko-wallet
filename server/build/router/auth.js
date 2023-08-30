@@ -5,5 +5,7 @@ router.route('/signup').post(controller.signup);
 router.route('/signin').post(controller.signin);
 router.route('/refresh').get(controller.refresh);
 router.route('/signout').get(controller.signout);
+router.route('/get-otp').post(controller.getOTP);
+router.route('/validate-otp').post(controller.validateOTP);
 export default router;
 //# sourceMappingURL=auth.js.map

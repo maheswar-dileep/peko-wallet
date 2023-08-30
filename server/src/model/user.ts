@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema<UserDocument>(
       {
         transactionDate: {
           type: Date,
-          default: Date.now, // Automatically set to the current date
+          default: Date.now,
         },
         transactionType: String,
         senderUniqueId: String,

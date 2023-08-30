@@ -6,3 +6,9 @@ interface IUser {
   balance: number;
   transactionHistory: Array<object>;
 }
+
+interface IOTP {
+  email: string;
+  code: string;
+  createdAt: Date;
+}
