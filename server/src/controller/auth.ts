@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt, { JwtPayload } from 'jsonwebtoken';
 import { User } from '../model/user.js';
 import validateSignup from '../helpers/validations/signup.js';
-import validateSignin from '../helpers/validations/signup.js';
+import validateSignin from '../helpers/validations/signin.js';
 
 //*--- signup ---*//
 
@@ -11,6 +11,9 @@ export const signup = async (req: Request, res: Response) => {
   try {
     const { error, value } = validateSignup(req.body);
     if (error) return res.status(422).send(error.details[0]?.message);
+
+    const userExists = await User.findOne({ email: value?.email });
+    if (userExists) return res.status(405).send({ success: false, message: 'user already exists' });
 
     const hash: string = await bcrypt.hash(value?.password, 10);
     const newUser = new User({
@@ -22,7 +25,7 @@ export const signup = async (req: Request, res: Response) => {
     await newUser.save();
     return res.status(201).send({ success: true, message: 'user created Successfully' });
   } catch (error) {
-    return res.status(500).send({ err: error });
+    return res.status(500).send({ success: false, err: error });
   }
 };
 
@@ -47,7 +50,7 @@ export const signin = async (req: Request, res: Response) => {
 
     const match = await bcrypt.compare(value?.password, user?.password);
 
-    if (!match) return res.status(401).send({ err: 'unauthorized user' });
+    if (!match) return res.status(406).send({ err: 'invalid email or password' });
 
     const accessToken = jwt.sign(
       {
@@ -78,7 +81,7 @@ export const signin = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.send({ accessToken });
+    res.send({ accessToken, success: true });
   } catch (error) {
     res.status(500).send({ err: error });
   }
@@ -94,7 +97,6 @@ export const refresh = async (req: Request, res: Response) => {
     if (!refreshTokenSecret) throw new Error('refresh token secret is not defined.');
 
     const cookies = req.cookies;
-
     if (!cookies?.jwt) return res.status(401).send({ message: 'Unauthorized' });
 
     const refreshToken: string = cookies.jwt;

@@ -2,13 +2,16 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../model/user.js';
 import validateSignup from '../helpers/validations/signup.js';
-import validateSignin from '../helpers/validations/signup.js';
+import validateSignin from '../helpers/validations/signin.js';
 //*--- signup ---*//
 export const signup = async (req, res) => {
     try {
         const { error, value } = validateSignup(req.body);
         if (error)
             return res.status(422).send(error.details[0]?.message);
+        const userExists = await User.findOne({ email: value?.email });
+        if (userExists)
+            return res.status(405).send({ success: false, message: 'user already exists' });
         const hash = await bcrypt.hash(value?.password, 10);
         const newUser = new User({
             username: value?.username,
@@ -19,7 +22,7 @@ export const signup = async (req, res) => {
         return res.status(201).send({ success: true, message: 'user created Successfully' });
     }
     catch (error) {
-        return res.status(500).send({ err: error });
+        return res.status(500).send({ success: false, err: error });
     }
 };
 //*--- sign in ---*//
@@ -39,7 +42,7 @@ export const signin = async (req, res) => {
             return res.status(404).send({ error: 'not found' });
         const match = await bcrypt.compare(value?.password, user?.password);
         if (!match)
-            return res.status(401).send({ err: 'unauthorized user' });
+            return res.status(406).send({ err: 'invalid email or password' });
         const accessToken = jwt.sign({
             Userinfo: {
                 id: user?._id,
@@ -58,7 +61,7 @@ export const signin = async (req, res) => {
             sameSite: 'none',
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
-        res.send({ accessToken });
+        res.send({ accessToken, success: true });
     }
     catch (error) {
         res.status(500).send({ err: error });
