@@ -80,18 +80,36 @@ export const transferAmount = async (req: Request, res: Response) => {
 
     return res.status(200).send({ success: true, message: 'amount transfered successfully', user });
   } catch (error) {
-    console.log(error);
     return res.status(500).send({ success: false, err: error });
   }
 };
 
+//*--- get balance ---*//
 
-//*--- request amount ---*//
-
-export const requestAmount =async (req:Request,res:Response) => {
+export const getBalance = async (req: Request, res: Response) => {
   try {
-    
+    const { id } = req.params;
+
+    const userExists: IUser = await User.findOne({ _id: id });
+    if (!userExists) return res.status(405).send({ success: false, message: 'user does not exist' });
+
+    return res.status(200).send({ success: true, balance: userExists.balance });
   } catch (error) {
     return res.status(500).send({ success: false, err: error });
   }
-}
+};
+
+//*--- get transactions ---*//
+
+export const getTransactions = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const userExists: IUser = await User.findOne({ _id: id });
+    if (!userExists) return res.status(405).send({ success: false, message: 'user does not exist' });
+
+    return res.status(200).send({ success: true, transactions: userExists.transactionHistory });
+  } catch (error) {
+    return res.status(500).send({ success: false, err: error });
+  }
+};

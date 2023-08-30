@@ -91,7 +91,7 @@ export const signin = async (req: Request, res: Response) => {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    res.send({ accessToken, success: true });
+    res.send({ accessToken, user: user, success: true });
   } catch (error) {
     res.status(500).send({ err: error });
   }

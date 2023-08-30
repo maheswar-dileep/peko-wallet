@@ -1,4 +1,3 @@
-
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 
@@ -19,6 +18,7 @@ export const verifyJwt = (req: Request, res: Response, next: NextFunction) => {
 
     (req as { userId?: string }).userId = decoded?.Userinfo?.id;
     (req as { userEmail?: string }).userEmail = decoded.Userinfo?.email;
+    
     next();
   });
 };
